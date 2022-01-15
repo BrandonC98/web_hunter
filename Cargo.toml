@@ -2,7 +2,17 @@
 name = "web_hunter"
 version = "0.1.0"
 edition = "2018"
+authors = ["Brandon brandoncampbell98@hotmail.co.uk"]
+
+description = "Web Hunter is designed to easily get pull data from a website"
+keywords = ["scaper"]
+license = "MIT"
+readme = "README.md"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+reqwest = { version = "0.11", features = ["json", "blocking"] }
+tokio = { version = "1", features = ["full"] }
+
+[dev-dependencies]
