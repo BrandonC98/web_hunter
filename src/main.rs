@@ -1,29 +1,28 @@
-extern crate pretty_env_logger;
-#[macro_use] extern crate log;
+//#[macro_use] extern crate log;
 
-pub mod req_client;
+//use req_client::req::ReqClient;
 
 use error_chain::error_chain;   
+use log::{LevelFilter, warn, debug, error};
+use simplelog::{TermLogger, TerminalMode, Config};
 use clap::Parser;
+use req_client::ReqClient;
+
+mod req_client;
 
 
 #[tokio::main]
 async fn main() -> Result<()> {
 
-    pretty_env_logger::init();
-    let args = Args::parse();
-    info!("Target: {}", args.url);
+    TermLogger::init(LevelFilter::Trace, Config::default(), TerminalMode::Stdout).unwrap();
+    debug!("Web Hunter Starting...");
 
-    let res = reqwest::get(args.url)
-    .await?; 
-    
-    println!("{}", res.text().await?);
-    
-    //   Document::from(res.as_str())
-    //     .find(Name("a"))
-    //     .filter_map(|n| n.attr("href"))
-    //     .for_each(|x| println!("{}", x));
-    
+    let args = Args::parse();
+
+   let mut req_client: ReqClient = Default::default();
+   req_client.send_req(&args.url).await;
+   req_client.find_links();
+        
     Ok(())
 }
 

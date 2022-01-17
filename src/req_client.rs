@@ -1,17 +1,18 @@
 
-mod req {
-    
+
+    use log::{LevelFilter, warn, debug, error};
+    use simplelog::{TermLogger, TerminalMode, Config};
+    use indicatif::ProgressBar;
     //use std::{fmt::Result, iter::repeat_with};
 
     
 
     //use anyhow::{Context};
     //use openssl::stack::Stack;
-    use reqwest::{Response, StatusCode};
+    use reqwest::{Response, StatusCode, Body};
+    use tokio::select;
     //use std::default;
 
-    //use crate::Error;
-    //use log::{debug, info, warn};
 
     #[derive(Default)]
     pub struct ReqClient {
@@ -22,21 +23,40 @@ mod req {
     impl ReqClient {
         
         pub async fn send_req(&mut self, target : &str) {
-            //pretty_env_logger::init();
-            info!("Request Target: {}", target);
+
+            TermLogger::init(LevelFilter::Trace, Config::default(), TerminalMode::Stdout).unwrap();
+            debug!("Web Hunter Starting...");
     
             let response : Response;
-
+            warn!("This a warning");
             match reqwest::get(target).await  {
                 Ok(resp) => response = resp,
                 Err(e) => panic!("{}", e.to_string()),
             };
-
             //debug!("Status code: {}", response.status());
 
             self.code = response.status();
             self.body = response.text().await.unwrap();
             
+        }
+
+        pub fn find_links(&mut self) {
+            let mut webpage = Vec::new();
+            webpage = self.body.split_whitespace().map(str::to_string).collect();
+            let loading = ProgressBar::new(webpage.len() as u64);
+            
+            for i in webpage.iter() {
+                
+                if !i.contains("href=") {
+                    loading.inc(1);
+                    continue;
+                }
+
+                
+                loading.inc(1);
+            }
+            
+            //println!("Link: {}", i);
         }
     
     }
@@ -107,7 +127,6 @@ mod req {
 
     }
 
-}
 
 
 
