@@ -20,6 +20,7 @@
     pub struct ReqClient {
         pub code: StatusCode,
         pub body: String,
+        elements: Vec<String>
     }
     
     impl ReqClient {
@@ -40,18 +41,39 @@
 
             self.code = response.status();
             self.body = response.text().await.unwrap();
-            debug!("response body character count: {}", self.body.len())
+            debug!("response body character count: {}", self.body.len());
             
         }
 
 
         pub fn find_links(&mut self) {
 
-            let mut d = Document::from(self.body.as_str())
+            self.elements = Vec::new();
+
+            Document::from(self.body.as_str())
             .find(Name("a"))
-            .filter_map(|n| n.attr("href"));
-            //.for_each(|x| println!("links: {}", x));
-            d.col
+            .filter_map(|n| n.attr("href"))
+            .for_each(|x| self.elements.push(x.to_string()));
+
+            //println!("link: {:?}", self.elements);
+        
+        }
+
+        pub fn filter_external(&mut self) {
+
+            let mut external: Vec<String> = Vec::new();
+            
+            for i in self.elements.iter() {
+
+                if i.contains("http") {
+                    external.push(i.to_string())
+                }
+
+            }
+
+            self.elements = external;
+            println!("link: {:?}", self.elements);
+
         }
     
     }

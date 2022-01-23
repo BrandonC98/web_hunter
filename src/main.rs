@@ -24,6 +24,7 @@ async fn main() -> Result<()> {
    let mut req_client: ReqClient = Default::default();
    req_client.send_req(&args.url).await;
    req_client.find_links();
+   req_client.filter_external();
         
     Ok(())
 }
