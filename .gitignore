@@ -2,3 +2,5 @@
 /.trunk/
 /.shellcheckrc
 /trunk
+/.markdownlint.yaml
+
