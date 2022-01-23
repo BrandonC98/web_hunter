@@ -3,7 +3,7 @@
 //use req_client::req::ReqClient;
 
 use error_chain::error_chain;   
-use log::{LevelFilter, warn, debug, error};
+use log::{LevelFilter, warn, debug, error, info};
 use simplelog::{TermLogger, TerminalMode, Config};
 use clap::Parser;
 use req_client::ReqClient;
@@ -14,10 +14,12 @@ mod req_client;
 #[tokio::main]
 async fn main() -> Result<()> {
 
-    TermLogger::init(LevelFilter::Trace, Config::default(), TerminalMode::Stdout).unwrap();
-    debug!("Web Hunter Starting...");
+    TermLogger::init(LevelFilter::Debug, Config::default(), TerminalMode::Stdout).unwrap();
+    info!("Web Hunter Starting...");
 
     let args = Args::parse();
+
+    info!("arguments url: {}", args.url);
 
    let mut req_client: ReqClient = Default::default();
    req_client.send_req(&args.url).await;
