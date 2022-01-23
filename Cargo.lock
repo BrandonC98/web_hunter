@@ -1527,6 +1527,7 @@ dependencies = [
  "select",
  "simplelog",
  "tokio",
+ "url",
 ]
 
 [[package]]

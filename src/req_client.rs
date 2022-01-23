@@ -6,6 +6,9 @@
     use indicatif::ProgressBar;
     //use std::{fmt::Result, iter::repeat_with};
     use select::predicate::Name;
+    use url::{Position, Url, form_urlencoded::parse};
+    use error_chain::error_chain;
+
 
     
 
@@ -20,16 +23,33 @@
     pub struct ReqClient {
         pub code: StatusCode,
         pub body: String,
-        elements: Vec<String>
+        elements: Vec<String>,
+        base_url: String
     }
     
+    error_chain! {
+        foreign_links {
+            ReqError(reqwest::Error);
+            IoError(std::io::Error);
+            UrlParseError(url::ParseError);
+            JoinError(tokio::task::JoinError);
+        }
+      }
+
     impl ReqClient {
+
+
+        pub async fn get_base_url(url: &Url, doc: &Document) -> Result<Url> {
+            let base_tag_href = doc.find(Name("base")).filter_map(|n| n.attr("href")).nth(0);
+            let base_url =
+              base_tag_href.map_or_else(|| Url::parse(&url[..Position::BeforePath]), Url::parse)?;
+            Ok(base_url)
+          }
         
         pub async fn send_req(&mut self, target : &str) {
-
-            //TermLogger::init(LevelFilter::Trace, Config::default(), TerminalMode::Stdout).unwrap();
     
             let response : Response;
+            let url = Url::parse(target);
             
             info!("Making request to: {}", target);
             match reqwest::get(target).await  {
@@ -39,8 +59,12 @@
             debug!("status code: {}", response.status());
             info!("Successful request to: {}", target);
 
+            let document = Document::from(response.text().await?.as_str());
+
             self.code = response.status();
             self.body = response.text().await.unwrap();
+            let m = get_base_url(&url, &document);
+            
             debug!("response body character count: {}", self.body.len());
             
         }
@@ -49,13 +73,16 @@
         pub fn find_links(&mut self) {
 
             self.elements = Vec::new();
-
+            info!("Begining search for html elements");
             Document::from(self.body.as_str())
             .find(Name("a"))
             .filter_map(|n| n.attr("href"))
             .for_each(|x| self.elements.push(x.to_string()));
-
+            info!("Search for html elements successfully");
             //println!("link: {:?}", self.elements);
+            if self.elements.is_empty() {
+                warn!("None of the selected elements were found in the html")
+            }
         
         }
 
@@ -73,7 +100,7 @@
 
             self.elements = external;
             println!("link: {:?}", self.elements);
-
+            
         }
     
     }
