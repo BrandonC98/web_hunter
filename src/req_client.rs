@@ -1,9 +1,11 @@
 
 
-    use log::{LevelFilter, warn, debug, error};
+    use log::{LevelFilter, warn, debug, error, info};
+    use select::document::Document;
     use simplelog::{TermLogger, TerminalMode, Config};
     use indicatif::ProgressBar;
     //use std::{fmt::Result, iter::repeat_with};
+    use select::predicate::Name;
 
     
 
@@ -24,39 +26,32 @@
         
         pub async fn send_req(&mut self, target : &str) {
 
-            TermLogger::init(LevelFilter::Trace, Config::default(), TerminalMode::Stdout).unwrap();
-            debug!("Web Hunter Starting...");
+            //TermLogger::init(LevelFilter::Trace, Config::default(), TerminalMode::Stdout).unwrap();
     
             let response : Response;
-            warn!("This a warning");
+            
+            info!("Making request to: {}", target);
             match reqwest::get(target).await  {
                 Ok(resp) => response = resp,
                 Err(e) => panic!("{}", e.to_string()),
             };
-            //debug!("Status code: {}", response.status());
+            debug!("status code: {}", response.status());
+            info!("Successful request to: {}", target);
 
             self.code = response.status();
             self.body = response.text().await.unwrap();
+            debug!("response body character count: {}", self.body.len())
             
         }
 
-        pub fn find_links(&mut self) {
-            let mut webpage = Vec::new();
-            webpage = self.body.split_whitespace().map(str::to_string).collect();
-            let loading = ProgressBar::new(webpage.len() as u64);
-            
-            for i in webpage.iter() {
-                
-                if !i.contains("href=") {
-                    loading.inc(1);
-                    continue;
-                }
 
-                
-                loading.inc(1);
-            }
-            
-            //println!("Link: {}", i);
+        pub fn find_links(&mut self) {
+
+            let mut d = Document::from(self.body.as_str())
+            .find(Name("a"))
+            .filter_map(|n| n.attr("href"));
+            //.for_each(|x| println!("links: {}", x));
+            d.col
         }
     
     }
